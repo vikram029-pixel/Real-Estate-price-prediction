@@ -1,33 +1,25 @@
-from flask import Flask, request, jsonify
-import util
+from flask import Flask,request, jsonify
+import model
+import json
+from types import SimpleNamespace
+from flask_cors import CORS, cross_origin
 
 app = Flask(__name__)
+cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
 
-@app.route('/get_location_names', methods=['GET'])
-def get_location_names():
-    response = jsonify({
-        'locations': util.get_location_names()
-    })
-    response.headers.add('Access-Control-Allow-Origin', '*')
+@app.route('/')
+@cross_origin()
+def hello_world():
+   return 'House Price Prediction'
 
-    return response
+@app.route('/predictPrice', methods=['POST'])
+@cross_origin()
+def predictPrice():
+    data = request.json
+    print(data['sqft'])
+    pricePredicted=model.predict_price(data['location'],data['sqft'],data['bath'],data['bhk']);
+    return jsonify(pricePredicted)
 
-@app.route('/predict_home_price', methods=['GET', 'POST'])
-def predict_home_price():
-    total_sqft = float(request.form['total_sqft'])
-    location = request.form['location']
-    bhk = int(request.form['bhk'])
-    bath = int(request.form['bath'])
-
-    response = jsonify({
-        'estimated_price': util.get_estimated_price(location,total_sqft,bhk,bath)
-    })
-    response.headers.add('Access-Control-Allow-Origin', '*')
-
-    return response
-
-if __name__ == "__main__":
-    print("Starting Python Flask Server For Home Price Prediction...")
-    util.load_saved_artifacts()
-    app.run()
-
+if __name__ == '__main__':
+   app.run()
